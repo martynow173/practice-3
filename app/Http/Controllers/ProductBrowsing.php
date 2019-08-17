@@ -7,18 +7,23 @@ use Illuminate\Http\Request;
 use App\Product;
 use App\Comment;
 
+
 class ProductBrowsing extends Controller
 {
-    const PRODS_PER_PAGE = 6;
+    const PRODS_PER_PAGE = 2;
+
+
 
     public function showList(Request $req) {
-
-        dd(Auth()->user()->getPermissionsViaRoles());
-
         $categoryId = $req->get('category_id');
         $sortBy = $req->get('sortBy');
         $sortMethod = $req->get('sortMethod');
         $categories = Category::all();
+        $page = $req->get('page');
+
+        if ($page == null) {
+            $page = 1;
+        }
         if (!isset($sortBy)) {
             $sortBy = 'created_at';
             $sortMethod = 'desc';
@@ -36,25 +41,26 @@ class ProductBrowsing extends Controller
             $products = Product::with(['categories', 'comments:product_id,rate'])->get();
             foreach ($products as $product) {
                 $avs = $product->comments()->avg('comments.rate');
+                $commentsNumber = $product->comments()->count();
                 $product->averageRate = $avs;
+                $product->commentsNumber = $commentsNumber;
             }
-
-
-//                ->orderBy($sortBy, $sortMethod)
-//                ->paginate(self::PRODS_PER_PAGE);
-
-
-
-//            dd(Product::find(1)->commentCount);
-
-
-
-//            foreach ($products as $prod) {
-//                dd($prod->comments[1]);
-//            }
+//            $products = $products->ToArray();
+            if ($sortMethod != null && $sortBy != null ) {
+                if ($sortMethod == 'ascent') {
+                    $products = $products->sortBy('id');
+                } else {
+                    $products = $products->sortByDesc('id');
+                }
+            }
+            $pageProducts = array();
+            for ($i = ($page - 1) * self::PRODS_PER_PAGE ; $i < $page * self::PRODS_PER_PAGE && $i < sizeof($products); $i++) {
+                $pageProducts[$i] = $products[$i];
+            }
         }
-        return response()->json(['products' =>  $products], 200);
+        return response()->json(['products' =>  $pageProducts], 200);
     }
+
 
     public function showFull($id) {
         $product = Product::with('categories', 'comments')->findOrFail($id);
