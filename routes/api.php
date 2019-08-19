@@ -19,13 +19,13 @@ Route::post('user/register', 'API\RegisterController@register')->name('register'
 
 Route::get('products', 'ProductBrowsing@showList');
 Route::group(['middleware' => ['jwt.auth']], function () {
-    Route::group(['middleware' => ['permission:review']], function () {
+    Route::group(['middleware' => ['role:user']], function () {
         Route::get('products/{id}', 'ProductBrowsing@showFull')->where('id', '[0-9]+');
         Route::put('reviews/new', 'ReviewController@save');
         Route::delete('reviews/delete', 'ReviewController@delete');
-        Route::get('products/{id}/average', 'ProductBrowsing@getAverageRate')->where('id', '[0-9]+');
+//        Route::get('products/{id}/average', 'ProductBrowsing@getAverageRate')->where('id', '[0-9]+');
     });
-    Route::group(['middleware' => ['permission:manage products']], function () {
+    Route::group(['middleware' => ['role:admin']], function () {
         Route::post('products/save', 'ProductManagement@store');
         Route::delete('products/delete', 'ProductManagement@delete');
 

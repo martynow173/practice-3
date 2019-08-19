@@ -10,7 +10,7 @@ use App\Comment;
 
 class ProductBrowsing extends Controller
 {
-    const PRODS_PER_PAGE = 2;
+    const PRODS_PER_PAGE = 1;
 
 
 
@@ -18,9 +18,7 @@ class ProductBrowsing extends Controller
         $categoryId = $req->get('category_id');
         $sortBy = $req->get('sortBy');
         $sortMethod = $req->get('sortMethod');
-        $categories = Category::all();
         $page = $req->get('page');
-
         if ($page == null) {
             $page = 1;
         }
@@ -28,9 +26,7 @@ class ProductBrowsing extends Controller
             $sortBy = 'created_at';
             $sortMethod = 'desc';
         }
-
         if ($categoryId != null) {
-
             $products = Product::whereHas('categories', function ($query) use ($categoryId) {
                 $query->where('categories.id', $categoryId);
             })
@@ -48,17 +44,27 @@ class ProductBrowsing extends Controller
 //            $products = $products->ToArray();
             if ($sortMethod != null && $sortBy != null ) {
                 if ($sortMethod == 'ascent') {
-                    $products = $products->sortBy('id');
+                    $products = $products->sortBy($sortBy);
                 } else {
-                    $products = $products->sortByDesc('id');
+                    $products = $products->sortByDesc($sortBy);
                 }
             }
-            $pageProducts = array();
-            for ($i = ($page - 1) * self::PRODS_PER_PAGE ; $i < $page * self::PRODS_PER_PAGE && $i < sizeof($products); $i++) {
-                $pageProducts[$i] = $products[$i];
+//            $pageProducts = array();
+            $pageProducts = $products->chunk(self::PRODS_PER_PAGE);
+//            dd($products[0]);
+//            for ($i = ($page - 1) * self::PRODS_PER_PAGE ; $i < $page * self::PRODS_PER_PAGE && $i < sizeof($products); $i++) {
+//
+//                $pageProducts[$i] = $products[$i];
+//            }
+            if (sizeof($pageProducts) < $page || $page < 1) {
+//            $page = 1;
+                return response()->json(['products' =>  []], 404);
+
             }
         }
-        return response()->json(['products' =>  $pageProducts], 200);
+
+
+        return response()->json(['products' =>  $pageProducts[$page - 1]], 200);
     }
 
 

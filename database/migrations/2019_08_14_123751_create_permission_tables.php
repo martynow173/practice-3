@@ -86,16 +86,16 @@ class CreatePermissionTables extends Migration
             ->forget(config('permission.cache.key'));
         $admin = Role::create(['name' => 'admin']);
         $user = Role::create(['name' => 'user']);
-        $review = Permission::create(['name' => 'review']);
-        $managing = Permission::create([ 'name' => 'manage products']);
-        $admin->syncPermissions($review, $managing);
-        $user->givePermissionTo('review');
+        $review = Permission::create(['name' => 'comment']);
+        $managing = Permission::create([ 'name' => 'manage']);
+        $admin->syncPermissions($review);
+//        $user->syncPermissions('comment');
         $testuser = User::create([
            'name' => 'banb',
            'email' => 'admin@hui.ru',
             'password' => bcrypt('12345678')
         ]);
-        $testuser->assignRole('admin');
+        $testuser->assignRole('admin', 'user');
         $testuser2 = User::create([
             'name' => 'user',
             'email' => 'user@hui.ru',
